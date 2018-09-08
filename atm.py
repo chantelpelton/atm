@@ -3,20 +3,64 @@ import os
 import getpass
 import pickle
 
-def validate_user(acct,pin,database):
-    if acct in database and database[acct]["pin"] == pin:
-        return True
-    else:
-        return False
+'''{1111:
+                   {"pin":1234,
+                    "name":"George",
+                    "balance":1000000.0
+                    },
+                1234:
+                    {"pin":5555,
+                    "name":"Gina",
+                    "balance":500.0
+                    },
+
+               }'''
+class BankDatabase():
+    def __init__(self,filename):
+        self.filename = filename
+        self.database = {}
+        self.read_database()
+
+    def read_database(self):
+        infile = open(self.filename, 'rb')
+        self.database = pickle.load(infile)
+        infile.close()
+
+    def write_database(self):
+        outfile = open(self.filename, 'wb')
+        pickle.dump(self.database,outfile)
+        outfile.close()
+
+    def get_pin(self,acct_num):
+        return self.database[acct_num]['pin']
+
+    def get_name(self,acct_num):
+        return self.database[acct_num]['name']
+
+    def set_balance(self,acct_num,new_balance):
+        self.database[acct_num]['balance'] = new_balance
+        self.write_database()
+
+    def get_balance(self,acct_num):
+        return self.database[acct_num]['balance'] 
+
+    def validate_user(self,acct_num,pin):
+        print(acct_num)
+        print(pin)
+        print(self.database)
+        if acct_num in self.database and self.database[acct_num]['pin'] == pin:
+            return True
+        else:
+            return False
 
 def withdraw(acct,database):
-    print ("\nYour balance is: {}".format(database[acct]["balance"]))
+    print ("\nYour balance is: {}".format(database.get_balance(acct)))
     while True:
         amt=float(raw_input("How much $$?:"))
-        if database[acct]["balance"] - amt >= 0.0:                
-            print("\nPrevious balance: {}".format(database[acct]["balance"]))
-            database[acct]["balance"]= database[acct]["balance"] - amt  
-            print("\nCurrent balance: {}".format(database[acct]["balance"])) 
+        if database.get_balance(acct) - amt >= 0.0:                
+            print("\nPrevious balance: {}".format(database.get_balance(acct)))
+            database.set_balance(acct, database.get_balance(acct) - amt)  
+            print("\nCurrent balance: {}".format(database.get_balance(acct))) 
             return
         else:
             print("Insufficient funds.")
@@ -47,7 +91,7 @@ def quickcash(acct,database):
 def access_account(acct,database):
     
     
-    print ("\n\n\nHello {}\n".format(database[acct]["name"]))
+    print ("\n\n\nHello {}\n".format(database.get_name(acct)))
 
     while True:
         valid_selection = False
@@ -66,7 +110,7 @@ def access_account(acct,database):
         
         if selection==1:
             #print balance
-            print ("\nYour balance is: {}".format(database[acct]["balance"]))
+            print ("\nYour balance is: {}".format(database.get_balance(acct)))
         elif selection==2:
             #withdraw
             withdraw(acct,database)
@@ -79,8 +123,7 @@ def access_account(acct,database):
         elif selection==5:
             #exit
             return
-        write_database(database)
-    
+   
 
 #def print_balance(selection):
     
@@ -95,45 +138,20 @@ def get_user(database):
     while not valid_user:
         acct=raw_input("Please enter your 4 digit account number:")
         pin=getpass.getpass("Please enter your 4 digit pin number:")
-        valid_user = validate_user(int(acct),int(pin),database)
+        valid_user = database.validate_user(int(acct),int(pin))
         
         if valid_user == False:
             print("That is not a valid account.. please try again")
     return int(acct)
 
-def write_database(database):
-    filename = 'accounts'
-    outfile = open(filename, 'wb')
-    pickle.dump(database,outfile)
-    outfile.close()
 
 def main():
     filename = 'accounts'
-    '''
-    outfile = open(filename, 'wb')
-    database = {1111:
-                    {"pin":1234,
-                    "name":"George",
-                    "balance":1000000.0
-                    },
-                1234:
-                    {"pin":5555,
-                    "name":"Gina",
-                    "balance":500.0
-                    },
-
-               }
-    pickle.dump(database,outfile)
-    outfile.close()
-    '''
-    infile = open(filename, 'rb')
-    database = pickle.load(infile)
-    infile.close()
-
+    database = BankDatabase(filename)
     while True: 
         acct=get_user(database)
         access_account(acct,database)
-        write_database(database)
+        
 main()
 
 
