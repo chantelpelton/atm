@@ -2,6 +2,7 @@
 import os
 import getpass
 import pickle
+import sqlite3
 
 '''{1111:
                    {"pin":1234,
@@ -15,7 +16,50 @@ import pickle
                     },
 
                }'''
-class BankDatabase():
+
+class SqlBankDatabase():
+    def __init__(self,filename):
+        self.filename = filename
+        self.database = {}
+        self.read_database()
+        
+
+
+    def read_database(self):
+        self.conn = sqlite3.connect(self.filename)
+        self.cursor = self.conn.cursor()
+
+    def write_database(self):
+        self.conn.commit()
+
+
+    def get_pin(self,acct_num):
+        pass
+
+
+    def get_name(self,acct_num):
+        row = self.cursor.execute("SELECT fullname FROM BankDatabase WHERE acct = ?", (acct_num,))
+        return self.cursor.fetchone()[0]
+
+
+    def set_balance(self,acct_num,new_balance):
+        self.cursor.execute("UPDATE BankDatabase SET balance = ? WHERE acct = ?", (new_balance,acct_num))
+        self.write_database()
+
+    def get_balance(self,acct_num):
+        row = self.cursor.execute("SELECT balance FROM BankDatabase WHERE acct = ?",(acct_num,))
+        return self.cursor.fetchone()[0]
+
+    def validate_user(self,acct_num,pin):
+        row = self.cursor.execute("SELECT acct,pin FROM BankDatabase WHERE acct = ? and pin = ?",(acct_num,pin))
+        if row == None:
+            return False
+        else:
+            return True
+          
+
+
+class PickleBankDatabase():
     def __init__(self,filename):
         self.filename = filename
         self.database = {}
@@ -45,9 +89,6 @@ class BankDatabase():
         return self.database[acct_num]['balance'] 
 
     def validate_user(self,acct_num,pin):
-        print(acct_num)
-        print(pin)
-        print(self.database)
         if acct_num in self.database and self.database[acct_num]['pin'] == pin:
             return True
         else:
@@ -66,24 +107,24 @@ def withdraw(acct,database):
             print("Insufficient funds.")
                 
 def deposit(acct,database):
-    print ("\nYour balance is: {}".format(database[acct]["balance"]))
+    print ("\nYour balance is: {}".format(database.get_balance(acct)))
     while True:
         amt=float(raw_input("How much are you depositing today$?:"))
         if amt > 0.0:                
-            print("\nPrevious balance: {}".format(database[acct]["balance"]))
-            database[acct]["balance"]= database[acct]["balance"] + amt  
-            print("\nCurrent balance: {}".format(database[acct]["balance"])) 
+            print("\nPrevious balance: {}".format(database.get_balance(acct)))
+            database.set_balance(acct,database.get_balance(acct) + amt)  
+            print("\nCurrent balance: {}".format(database.get_balance(acct))) 
             return
         else:
             print("Enter an amount greater than 0.")
 
 def quickcash(acct,database):
-    print ("\nYour balance is: {}".format(database[acct]["balance"]))
+    print ("\nYour balance is: {}".format(database.get_balance(acct)))
 
-    if database[acct]["balance"] - 40.0 >= 0.0:                
-        print("\nPrevious balance: {}".format(database[acct]["balance"]))
-        database[acct]["balance"]= database[acct]["balance"] - 40.0  
-        print("\nCurrent balance: {}".format(database[acct]["balance"])) 
+    if database.get_balance(acct) - 40.0 >= 0.0:                
+        print("\nPrevious balance: {}".format(database.get_balance(acct)))
+        database.set_balance(acct, database.get_balance(acct) - 40.0)
+        print("\nCurrent balance: {}".format(database.get_balance(acct))) 
         return
     else:
         print("Insufficient funds.")
@@ -147,7 +188,8 @@ def get_user(database):
 
 def main():
     filename = 'accounts'
-    database = BankDatabase(filename)
+    #database = PickleBankDatabase(filename)
+    database = SqlBankDatabase("first_tech")
     while True: 
         acct=get_user(database)
         access_account(acct,database)
