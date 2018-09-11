@@ -35,8 +35,8 @@ class SqlBankDatabase():
         return self.cursor.fetchone()[0]
 
     def validate_user(self,acct_num,pin):
-        row = self.cursor.execute("SELECT acct,pin FROM BankDatabase WHERE acct = ? and pin = ?",(acct_num,pin))
-        if row == None:
+        self.cursor.execute("SELECT acct,pin FROM BankDatabase WHERE acct = ? and pin = ?",(acct_num,pin))
+        if self.cursor.fetchone() == None:
             return False
         else:
             return True

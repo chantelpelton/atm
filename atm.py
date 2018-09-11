@@ -18,7 +18,7 @@ def withdraw(acct,database):
 def deposit(acct,database):
     print ("\nYour balance is: {}".format(database.get_balance(acct)))
     while True:
-        amt=float(raw_input("How much are you depositing today$?:"))
+        amt=float(raw_input("How much are you depositing today?:"))
         if amt > 0.0:                
             print("\nPrevious balance: {}".format(database.get_balance(acct)))
             database.set_balance(acct,database.get_balance(acct) + amt)  
@@ -97,8 +97,8 @@ def get_user(database):
 
 def main():
     filename = 'accounts'
-    database = bank_db.PickleBankDatabase(filename)
-    #database = bank_db.SqlBankDatabase("first_tech")
+    #database = bank_db.PickleBankDatabase(filename)
+    database = bank_db.SqlBankDatabase("first_tech")
     while True: 
         acct=get_user(database)
         access_account(acct,database)
